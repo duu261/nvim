@@ -1,4 +1,4 @@
---simple no config plugin
+--simple or no config plugin
 return {
 
 
@@ -11,6 +11,28 @@ return {
         name = "vimBeGood",
         dependencies = 
             "nvim-lua/plenary.nvim",
+    },
+
+    "eandrju/cellular-automaton.nvim",
+
+    {
+        "ThePrimeagen/vim-apm",
+        config = function()
+            local apm = require("vim-apm")
+
+            apm:setup({})
+            vim.keymap.set("n", "<leader>apm", function() apm:toggle_monitor() end)
+        end
+    },
+
+    {
+        "mbbill/undotree",
+
+        config = function() 
+            vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
+        end
     }
+
+
 
 }
