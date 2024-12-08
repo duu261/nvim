@@ -23,8 +23,8 @@ vim.opt.incsearch = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
-vim.opt.scrolloff = 15 
-vim.opt.signcolumn = "yes" 
+vim.opt.scrolloff = 15
+vim.opt.signcolumn = "yes"
 
 vim.opt.isfname:append("@-@")
 
@@ -36,7 +36,7 @@ vim.opt.showmode = true
 
 -- Decrease mapped sequence wait time
 -- Displays which-key popup sooner
-vim.opt.timeoutlen = 400
+vim.opt.timeoutlen = 600
 
 -- Configure how new splits should be opened
 vim.opt.splitright = true
