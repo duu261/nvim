@@ -2,16 +2,6 @@ require("duu.set")
 require("duu.remap")
 require("duu.lazy_init")
 
--- DO.not
--- DO NOT INCLUDE THIS
-
--- If i want to keep doing lsp debugging
--- function restart_htmx_lsp()
---     require("lsp-debug-tools").restart({ expected = {}, name = "htmx-lsp", cmd = { "htmx-lsp", "--level", "DEBUG" }, root_dir = vim.loop.cwd(), });
--- end
-
--- DO NOT INCLUDE THIS
--- DO.not
 
 local augroup = vim.api.nvim_create_augroup
 local DuuGroup = augroup('Duu', {})
@@ -40,23 +30,12 @@ autocmd('TextYankPost', {
     end,
 })
 
-autocmd({"BufWritePre"}, {
+-- auto remove trailing white space
+autocmd({ "BufWritePre" }, {
     group = DuuGroup,
     pattern = "*",
     command = [[%s/\s\+$//e]],
 })
-
---autocmd('BufEnter', {
---    group = DuuGroup,
---    callback = function()
---        if vim.bo.filetype == "zig" then
---            vim.cmd.colorscheme("tokyonight-night")
---        else
---            vim.cmd.colorscheme("rose-pine-moon")
---        end
---    end
---})
-
 
 autocmd('LspAttach', {
     group = DuuGroup,

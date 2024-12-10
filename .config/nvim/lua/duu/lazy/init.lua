@@ -9,8 +9,8 @@ return {
     {
         "theprimeagen/vim-be-good",
         name = "vimBeGood",
-        dependencies = 
-            "nvim-lua/plenary.nvim",
+        dependencies =
+        "nvim-lua/plenary.nvim",
     },
 
     "eandrju/cellular-automaton.nvim",
@@ -28,10 +28,11 @@ return {
     {
         "mbbill/undotree",
 
-        config = function() 
+        config = function()
             vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
         end
-    }
+    },
+    { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
 
 
 
