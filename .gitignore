@@ -1,3 +1,4 @@
+.config/nvim/kickstartinit.lua
 *.bak
-kickstart_init.lua
+.config/kvim
 lazy-lock.json
