@@ -6,7 +6,7 @@ return {
 		"folke/todo-comments.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 	},
-
+	event = "VimEnter", -- Load Telescope on startup
 	config = function()
 		local telescope = require("telescope")
 		local open_with_trouble = require("trouble.sources.telescope").open
@@ -24,25 +24,35 @@ return {
 				},
 			},
 		})
-
-		local builtin = require("telescope.builtin")
-
-		-- Key mappings
-		vim.keymap.set("n", "<leader>pf", builtin.find_files, { desc = "Find Files" })
-		vim.keymap.set("n", "<leader>pr", builtin.oldfiles, { desc = "Find Files" })
-		vim.keymap.set("n", "<leader>pg", builtin.git_files, { desc = "Find Git Files" })
-		vim.keymap.set("n", "<leader>pws", function()
-			local word = vim.fn.expand("<cword>")
-			builtin.grep_string({ search = word })
-		end, { desc = "Grep current word" })
-		vim.keymap.set("n", "<leader>pWs", function()
-			local word = vim.fn.expand("<cWORD>")
-			builtin.grep_string({ search = word })
-		end, { desc = "Grep current WORD" })
-		vim.keymap.set("n", "<leader>ps", function()
-			builtin.grep_string({ search = vim.fn.input("Grep > ") })
-		end, { desc = "Grep user input" })
-		vim.keymap.set("n", "<leader>vh", builtin.help_tags, { desc = "Search Help Tags" })
 	end,
-	vim.keymap.set("n", "<leader>pt", "<cmd>TodoTelescope<cr>", { desc = "Find todos" }),
+	keys = {
+		{ "<leader>pf", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
+		{ "<leader>pr", "<cmd>Telescope oldfiles<cr>", desc = "Recent Files" },
+		{ "<leader>pg", "<cmd>Telescope git_files<cr>", desc = "Find Git Files" },
+		{
+			"<leader>pws",
+			function()
+				local word = vim.fn.expand("<cword>")
+				require("telescope.builtin").grep_string({ search = word })
+			end,
+			desc = "Grep current word",
+		},
+		{
+			"<leader>pWs",
+			function()
+				local word = vim.fn.expand("<cWORD>")
+				require("telescope.builtin").grep_string({ search = word })
+			end,
+			desc = "Grep current WORD",
+		},
+		{
+			"<leader>ps",
+			function()
+				require("telescope.builtin").grep_string({ search = vim.fn.input("Grep > ") })
+			end,
+			desc = "Grep user input",
+		},
+		{ "<leader>vh", "<cmd>Telescope help_tags<cr>", desc = "Search Help Tags" },
+		{ "<leader>pt", "<cmd>TodoTelescope<cr>", desc = "Find todos" },
+	},
 }

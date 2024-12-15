@@ -4,7 +4,7 @@ return {
 	opts = {
 		focus = true,
 	},
-	cmd = "Trouble",
+	cmd = { "Trouble", "TroubleToggle" }, -- Change this to load only when Trouble commands are used
 	keys = {
 		{
 			"<leader>xx",

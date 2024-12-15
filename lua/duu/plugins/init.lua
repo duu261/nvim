@@ -4,20 +4,20 @@ return {
 	-- Undo tree visualization
 	{
 		"mbbill/undotree",
-		config = function()
-			vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle, { desc = "Toggle UndoTree" })
-		end,
+		keys = {
+			{ "<leader>u", "<cmd>UndotreeToggle<CR>", desc = "Toggle UndoTree" },
+		},
 	},
 
 	{
 		"theprimeagen/vim-be-good",
 		name = "vimBeGood",
-		dependencies = "nvim-lua/plenary.nvim", -- Requires plenary.nvim
+		cmd = { "VimBeGood" }, -- Load only when VimBeGood command is used
 	},
 	{
 		"szw/vim-maximizer",
 		keys = {
 			{ "<leader>vm", "<cmd>MaximizerToggle<CR>", desc = "Maximize/minimize a split" },
-		},
+		}, -- Load only when the key is pressed
 	},
 }

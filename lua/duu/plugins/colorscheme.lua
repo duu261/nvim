@@ -28,5 +28,6 @@ return {
 			-- setup must be called before loading
 			vim.cmd.colorscheme("catppuccin-macchiato")
 		end,
+		lazy = false,
 	},
 }

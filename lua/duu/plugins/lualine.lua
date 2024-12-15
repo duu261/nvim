@@ -39,4 +39,5 @@ return {
 			},
 		})
 	end,
+	lazy = false, -- Add this line
 }

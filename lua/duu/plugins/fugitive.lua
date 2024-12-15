@@ -1,8 +1,17 @@
 return {
 	"tpope/vim-fugitive",
+	keys = {
+		{
+			"<leader>gs",
+			function()
+				vim.cmd.Git()
+			end,
+			desc = "Open Git status",
+		},
+	},
 	config = function()
 		-- Open Git status
-		vim.keymap.set("n", "<leader>gs", vim.cmd.Git, { desc = "Open Git status" })
+		-- vim.keymap.set("n", "<leader>gs", vim.cmd.Git, { desc = "Open Git status" }) -- Moved to keys
 
 		local Duu_Fugitive = vim.api.nvim_create_augroup("Duu_Fugitive", {})
 

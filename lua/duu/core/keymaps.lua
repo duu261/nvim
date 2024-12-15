@@ -13,6 +13,7 @@ vim.keymap.set("n", "<leader>Y", [["+Y]], { desc = "Yank line to system clipboar
 vim.keymap.set("x", "<leader>p", [["_dP]], { desc = "Paste without overwriting register" })
 -- Delete without overwriting register
 vim.keymap.set({ "n", "v" }, "<leader>d", '"_d', { desc = "Delete without overwriting register" })
+-- vim.keymap.set({ "n", "v" }, "<leader>c", '"_c', { desc = "Cut without overwriting register" })
 
 -- Moving lines in visualmode
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = "Move selected lines down" })
@@ -29,7 +30,7 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll half-page up and center
 vim.keymap.set("n", "n", "nzzzv", { desc = "Search next occurrence and center" })
 vim.keymap.set("n", "N", "Nzzzv", { desc = "Search previous occurrence and center" })
 
-vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { desc = "Format code with LSP" })
+-- vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { desc = "Format code with LSP" })
 
 vim.keymap.set("n", "<C-j>", "<cmd>cnext<CR>zz", { desc = "Go to next quickfix item and center" })
 vim.keymap.set("n", "<C-k>", "<cmd>cprev<CR>zz", { desc = "Go to previous quickfix item and center" })
