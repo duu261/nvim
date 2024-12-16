@@ -2,28 +2,36 @@ return {
 	"nvim-telescope/telescope.nvim",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
+		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 		"folke/trouble.nvim",
 		"folke/todo-comments.nvim",
-		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+		"nvim-telescope/telescope-ui-select.nvim",
 	},
 	event = "VimEnter", -- Load Telescope on startup
 	config = function()
 		local telescope = require("telescope")
-		local open_with_trouble = require("trouble.sources.telescope").open
+		local trouble = require("trouble.sources.telescope")
 
 		telescope.setup({
 			defaults = {
-				borderchars = {
-					prompt = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-					results = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-					preview = { "─", "│", "─", "│", "┌", "┐", "┘", "└" },
-				},
 				mappings = {
-					i = { ["<c-t>"] = open_with_trouble }, -- Open with Trouble in insert mode
-					n = { ["<c-t>"] = open_with_trouble }, -- Open with Trouble in normal mode
+					i = { ["<c-t>"] = trouble.open }, -- Open with Trouble in insert mode
+					n = { ["<c-t>"] = trouble.open }, -- Open with Trouble in normal mode
+				},
+			},
+			extensions = {
+				fzf = {},
+				["ui-select"] = {
+					require("telescope.themes").get_dropdown({}),
 				},
 			},
 		})
+
+		-- Load extensions
+		telescope.load_extension("fzf")
+		telescope.load_extension("ui-select")
+
+		-- ... key mappings ...
 	end,
 	keys = {
 		{ "<leader>pf", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
