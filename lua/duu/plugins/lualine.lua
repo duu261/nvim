@@ -1,6 +1,7 @@
 return {
 	"nvim-lualine/lualine.nvim",
 	dependencies = { "nvim-tree/nvim-web-devicons" },
+	lazy = false,
 
 	config = function()
 		local lualine = require("lualine")
@@ -12,11 +13,22 @@ return {
 				section_separators = "",
 				component_separators = "⎮",
 				theme = "catppuccin-macchiato",
+				disabled_filetypes = {
+					statusline = {},
+					winbar = {},
+				},
 			},
 			sections = {
 				lualine_a = { "mode" },
-				lualine_b = { "branch", "diff" },
-				lualine_c = { { "diagnostics" }, { "filename", path = 3 } },
+				lualine_b = {
+					"branch",
+					{
+						lazy_status.updates,
+						cond = lazy_status.has_updates,
+						color = { fg = "#f5a97f" },
+					},
+				},
+				lualine_c = { { "filename", status = true } },
 				lualine_x = {
 					{
 						icon = "󰇥",
@@ -25,11 +37,6 @@ return {
 						active_indicators = { "H", "T", "N", "S" },
 						_separator = " ",
 					},
-					{
-						lazy_status.updates,
-						cond = lazy_status.has_updates,
-						color = { fg = "#f5a97f" },
-					},
 					{ "encoding" },
 					{ "fileformat" },
 					{ "filetype" },
@@ -37,7 +44,57 @@ return {
 				lualine_y = { "progress" },
 				lualine_z = { "location" },
 			},
+			inactive_sections = {
+				lualine_a = {},
+				lualine_b = {
+					{
+						"filename",
+						path = 3,
+						status = true,
+					},
+				},
+				lualine_c = {},
+				lualine_x = { "filetype", "location" },
+				lualine_y = {},
+				lualine_z = {},
+			},
+			tabline = {
+				lualine_a = {
+					{
+						"buffers",
+						mode = 4,
+					},
+				},
+				lualine_c = {},
+				lualine_b = { "lsp_progress" },
+				lualine_x = {},
+				lualine_y = { "grapple" },
+				lualine_z = { "tabs" },
+			},
+			winbar = {
+				lualine_a = {},
+				lualine_b = { "diagnostics" },
+				lualine_c = {
+					{ "diff", "filename", path = 3, status = true },
+				},
+				lualine_x = {},
+				lualine_y = {},
+				lualine_z = {},
+			},
+			inactive_winbar = {
+				lualine_a = {},
+				lualine_b = {},
+				lualine_c = {
+					{
+						"filename",
+						path = 3,
+						status = true,
+					},
+				},
+				lualine_x = {},
+				lualine_y = {},
+				lualine_z = {},
+			},
 		})
 	end,
-	lazy = false, -- Add this line
 }

@@ -1,6 +1,10 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
 	build = ":TSUpdate",
+	dependencies = {
+		"nvim-treesitter/nvim-treesitter-textobjects",
+	},
+
 	event = "BufReadPost", -- Change this to BufReadPost
 	config = function()
 		require("nvim-treesitter.configs").setup({

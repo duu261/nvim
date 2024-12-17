@@ -34,4 +34,11 @@ return {
 			{ "<leader>vm", "<cmd>MaximizerToggle<CR>", desc = "Maximize/minimize a split" },
 		}, -- Load only when the key is pressed
 	},
+	-- TODO: some web thing
+	-- {
+	--   "iamcco/markdown-preview.nvim",
+	--   cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+	--   ft = { "markdown" },
+	--   build = function() vim.fn["mkdp#util#install"]() end,
+	-- },
 }

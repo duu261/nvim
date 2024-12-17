@@ -43,3 +43,12 @@ vim.keymap.set(
 	[[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]],
 	{ desc = "Search and replace word under cursor" }
 )
+-- buffers
+-- vim.api.nvim_set_keymap("n", "tk", ":blast<enter>", {noremap=false})
+-- vim.api.nvim_set_keymap("n", "tj", ":bfirst<enter>", {noremap=false})
+-- vim.api.nvim_set_keymap("n", "th", ":bprev<enter>", {noremap=false})
+-- vim.api.nvim_set_keymap("n", "tl", ":bnext<enter>", {noremap=false})
+-- vim.api.nvim_set_keymap("n", "td", ":bdelete<enter>", {noremap=false})
+-- -- Remap for dealing with word wrap
+vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
+vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })

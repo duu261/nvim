@@ -35,6 +35,7 @@ return {
 	end,
 	keys = {
 		{ "<leader>pf", "<cmd>Telescope find_files<cr>", desc = "Find Files" },
+		{ "<leader>pb", "<cmd>Telescope buffers<cr>", desc = "Find Buffers" },
 		{ "<leader>pr", "<cmd>Telescope oldfiles<cr>", desc = "Recent Files" },
 		{ "<leader>pg", "<cmd>Telescope git_files<cr>", desc = "Find Git Files" },
 		{

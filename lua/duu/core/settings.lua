@@ -1,4 +1,4 @@
-local tab_size = 2
+local tab_size = 4
 
 vim.opt.guicursor = ""
 vim.opt.termguicolors = true
@@ -27,7 +27,7 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
 vim.opt.signcolumn = "yes"
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 15
 
 vim.opt.timeoutlen = 500
 vim.opt.updatetime = 50
