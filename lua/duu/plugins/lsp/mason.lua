@@ -5,6 +5,8 @@ return {
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		"jay-babu/mason-nvim-dap.nvim",
 		"j-hui/fidget.nvim",
+		"mfussenegger/nvim-jdtls",
+		{ "ray-x/lsp_signature.nvim", opts = {} },
 	},
 	config = function()
 		-- import mason
@@ -56,6 +58,5 @@ return {
 			},
 			-- ... the rest of your fidget config
 		})
-		require("lsp_signature").setup()
 	end,
 }
