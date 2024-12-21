@@ -21,15 +21,12 @@ return {
 			sections = {
 				lualine_a = { "mode" },
 				lualine_b = {
+					"diagnostics",
 					"branch",
-					{
-						lazy_status.updates,
-						cond = lazy_status.has_updates,
-						color = { fg = "#f5a97f" },
-					},
+					"diff",
 				},
-				lualine_c = { { "filename", status = true } },
-				lualine_x = {
+				lualine_c = {
+					{ "filename", status = true },
 					{
 						icon = "󰇥",
 						"harpoon2",
@@ -37,6 +34,15 @@ return {
 						active_indicators = { "H", "T", "N", "S" },
 						_separator = " ",
 					},
+				},
+				lualine_x = {
+
+					{
+						lazy_status.updates,
+						cond = lazy_status.has_updates,
+						color = { fg = "#f5a97f" },
+					},
+
 					{ "encoding" },
 					{ "fileformat" },
 					{ "filetype" },
@@ -71,30 +77,30 @@ return {
 				lualine_y = { "grapple" },
 				lualine_z = { "tabs" },
 			},
-			winbar = {
-				lualine_a = {},
-				lualine_b = { "diagnostics" },
-				lualine_c = {
-					{ "diff", "filename", path = 3, status = true },
-				},
-				lualine_x = {},
-				lualine_y = {},
-				lualine_z = {},
-			},
-			inactive_winbar = {
-				lualine_a = {},
-				lualine_b = {},
-				lualine_c = {
-					{
-						"filename",
-						path = 3,
-						status = true,
-					},
-				},
-				lualine_x = {},
-				lualine_y = {},
-				lualine_z = {},
-			},
+			-- winbar = {
+			-- 	lualine_a = {},
+			-- 	lualine_b = {},
+			-- 	lualine_c = {
+			-- 		-- {  "filename", path = 3, status = true },
+			-- 	},
+			-- 	lualine_x = {},
+			-- 	lualine_y = {},
+			-- 	lualine_z = {},
+			-- },
+			-- inactive_winbar = {
+			-- 	lualine_a = {},
+			-- 	lualine_b = {},
+			-- 	lualine_c = {
+			-- 		{
+			-- 			-- "filename",
+			-- 			-- path = 3,
+			-- 			-- status = true,
+			-- 		},
+			-- 	},
+			-- 	lualine_x = {},
+			-- 	lualine_y = {},
+			-- 	lualine_z = {},
+			-- },
 		})
 	end,
 }

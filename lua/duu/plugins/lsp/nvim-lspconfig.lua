@@ -74,8 +74,8 @@ return {
 				opts.desc = "Restart LSP"
 				keymap.set("n", "<leader>lrs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
 
-				opts.desc = "[D]ocument [S]ymbols"
-				keymap.set("n", "<leader>ds", "<cmd>Telescope lsp_document_symbols<CR>", opts)
+				opts.desc = "[L]ist Document [S]ymbols"
+				keymap.set("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<CR>", opts)
 
 				opts.desc = "[W]orkspace [A]dd Folder"
 				keymap.set("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, opts)
