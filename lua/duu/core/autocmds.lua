@@ -28,4 +28,9 @@ vim.cmd([[
         autocmd!
         autocmd FileType java lua require'duu.core.jdtls'.setup_jdtls()
     augroup end
+
+    augroup copilot_disable
+        autocmd!
+        autocmd FileType java Copilot disable
+    augroup end
 ]])

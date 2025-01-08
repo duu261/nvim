@@ -131,7 +131,7 @@ local function setup_jdtls()
 	local bundles = get_bundles()
 
 	-- Determine the root directory of the project by looking for these specific markers
-	local root_dir = jdtls.setup.find_root({ ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" })
+	local root_dir = jdtls.setup.find_root({ ".git", "mvnw", "gradlew", "pom.xml", "build.gradle", "build.xml" })
 
 	-- Tell our JDTLS language features it is capable of
 	local capabilities = {
@@ -159,7 +159,7 @@ local function setup_jdtls()
 	-- Set the command that starts the JDTLS language server jar
 	local cmd = {
 		-- "java",
-		"/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+		os.getenv("JDK23") .. "/bin/java",
 		"-Declipse.application=org.eclipse.jdt.ls.core.id1",
 		"-Dosgi.bundles.defaultStartLevel=4",
 		"-Declipse.product=org.eclipse.jdt.ls.core.product",
@@ -271,7 +271,28 @@ local function setup_jdtls()
 				runtimes = {
 					{
 						name = "JavaSE-1.8",
-						path = "/usr/local/java/jdk1.8.0_431",
+						path = os.getenv("JDK8"),
+						default = true,
+					},
+					{
+						name = "JavaSE-11",
+						path = os.getenv("JDK11"),
+					},
+					{
+						name = "JavaSE-17",
+						path = os.getenv("JDK17"),
+					},
+					{
+						name = "JavaSE-21",
+						path = os.getenv("JDK21"),
+					},
+					{
+						name = "JavaSE-22",
+						path = os.getenv("JDK22"),
+					},
+					{
+						name = "JavaSE-23",
+						path = os.getenv("JDK23"),
 					},
 				},
 				updateBuildConfiguration = "interactive",
