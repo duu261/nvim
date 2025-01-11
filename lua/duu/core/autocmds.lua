@@ -34,3 +34,7 @@ vim.cmd([[
         autocmd FileType java Copilot disable
     augroup end
 ]])
+-- Filetype association for Hyprland config files
+vim.filetype.add({
+	pattern = { [".*/hypr/.*%.conf"] = "hyprlang" },
+})

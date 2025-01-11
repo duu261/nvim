@@ -7,10 +7,12 @@ return {
 
 	event = "BufReadPost", -- Change this to BufReadPost
 	config = function()
+		---@diagnostic disable-next-line: missing-fields
 		require("nvim-treesitter.configs").setup({
 			-- A list of parser names, or "all"
 			ensure_installed = {
 				"vimdoc",
+				"regex",
 				"java",
 				"html",
 				"css",
