@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 return {
 	"nvim-lualine/lualine.nvim",
 	dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -36,7 +37,11 @@ return {
 					},
 				},
 				lualine_x = {
-
+					{
+						require("noice").api.statusline.mode.get,
+						cond = require("noice").api.statusline.mode.has,
+						color = { fg = "#ed8796" },
+					},
 					{
 						lazy_status.updates,
 						cond = lazy_status.has_updates,
