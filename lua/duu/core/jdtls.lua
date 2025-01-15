@@ -275,10 +275,6 @@ local function setup_jdtls()
 						default = true,
 					},
 					{
-						name = "JavaSE-11",
-						path = os.getenv("JDK11"),
-					},
-					{
 						name = "JavaSE-17",
 						path = os.getenv("JDK17"),
 					},
