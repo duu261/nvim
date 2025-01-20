@@ -4,7 +4,6 @@ return {
 		"williamboman/mason-lspconfig.nvim",
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		"jay-babu/mason-nvim-dap.nvim",
-		"j-hui/fidget.nvim",
 		"mfussenegger/nvim-jdtls",
 		{ "ray-x/lsp_signature.nvim", opts = {} },
 	},
@@ -49,14 +48,6 @@ return {
 				"google-java-format",
 				"jdtls",
 			},
-		})
-		require("fidget").setup({
-			notification = {
-				window = {
-					winblend = 0,
-				},
-			},
-			-- ... the rest of your fidget config
 		})
 	end,
 }

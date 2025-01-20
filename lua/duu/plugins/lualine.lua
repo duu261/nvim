@@ -1,4 +1,4 @@
----@diagnostic disable: undefined-field
+---@diagnostic disable: undefined-field, deprecated
 return {
 	"nvim-lualine/lualine.nvim",
 	dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -7,13 +7,24 @@ return {
 	config = function()
 		local lualine = require("lualine")
 		local lazy_status = require("lazy.status") -- to configure lazy pending updates count
-
+		local trouble = require("trouble")
+		local symbols = trouble.statusline({
+			mode = "lsp_document_symbols",
+			groups = {},
+			title = false,
+			filter = { range = true },
+			format = "{kind_icon}{symbol.name:Normal}",
+			-- The following line is needed to fix the background color
+			-- Set it to the lualine section you want to use
+			hl_group = "lualine_c_normal",
+		})
 		-- configure lualine with modified theme
 		lualine.setup({
 			options = {
+				globalstatus = false,
 				section_separators = "",
 				component_separators = "⎮",
-				theme = "catppuccin-macchiato",
+				theme = "auto",
 				disabled_filetypes = {
 					statusline = {},
 					winbar = {},
@@ -22,9 +33,9 @@ return {
 			sections = {
 				lualine_a = { "mode" },
 				lualine_b = {
-					"diagnostics",
 					"branch",
 					"diff",
+					"diagnostics",
 				},
 				lualine_c = {
 					{ "filename", status = true },
@@ -37,10 +48,25 @@ return {
 					},
 				},
 				lualine_x = {
+					-- {
+					-- 	require("noice").api.status.message.get_hl,
+					-- 	cond = require("noice").api.status.message.has,
+					-- },
+					{
+						require("noice").api.status.command.get,
+						cond = require("noice").api.status.command.has,
+					},
+					{
+						require("noice").api.status.mode.get,
+						cond = require("noice").api.status.mode.has,
+					},
+					{
+						require("noice").api.status.search.get,
+						cond = require("noice").api.status.search.has,
+					},
 					{
 						require("noice").api.statusline.mode.get,
 						cond = require("noice").api.statusline.mode.has,
-						color = { fg = "#ed8796" },
 					},
 					{
 						lazy_status.updates,
@@ -82,6 +108,14 @@ return {
 				lualine_y = { "grapple" },
 				lualine_z = { "tabs" },
 			},
+			winbar = { -- Add winbar configuration
+				lualine_b = {
+					{
+						symbols.get,
+						cond = symbols.has,
+					},
+				},
+			},
 			-- winbar = {
 			-- 	lualine_a = {},
 			-- 	lualine_b = {},
@@ -106,6 +140,7 @@ return {
 			-- 	lualine_y = {},
 			-- 	lualine_z = {},
 			-- },
+			extensions = { "trouble", "nvim-dap-ui", "oil", "lazy", "mason", "man", "quickfix" },
 		})
 	end,
 }

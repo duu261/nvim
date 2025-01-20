@@ -36,12 +36,12 @@ return {
 							},
 						},
 						-- if not use nvim-cmp uncomment this
-						-- cmdline_popupmenu = {
-						-- 	position = {
-						-- 		row = "67%",
-						-- 		col = "50%",
-						-- 	},
-						-- },
+						cmdline_popupmenu = {
+							position = {
+								row = "67%",
+								col = "50%",
+							},
+						},
 					},
 				}, -- position the cmdline and popupmenu together
 				long_message_to_split = true, -- long messages will be sent to a split
