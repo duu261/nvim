@@ -33,7 +33,7 @@ vim.opt.smartcase = true
 
 vim.opt.signcolumn = "yes"
 vim.opt.scrolloff = 15
-vim.opt.sidescrolloff = 8 -- Columns of context
+vim.opt.sidescrolloff = 8
 vim.opt.smoothscroll = true
 
 vim.opt.virtualedit = "block" -- Allow cursor to move where there is no text in visual block mode
