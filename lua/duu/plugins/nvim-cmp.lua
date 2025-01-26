@@ -1,5 +1,6 @@
 return {
 	"hrsh7th/nvim-cmp",
+	version = false, -- last release is way too old
 	event = "InsertEnter",
 	dependencies = {
 		"hrsh7th/cmp-buffer", -- source for text in buffer
@@ -15,23 +16,23 @@ return {
 			-- install jsregexp (optional!).
 			build = "make install_jsregexp",
 		},
+		"rafamadriz/friendly-snippets",
 		"saadparwaiz1/cmp_luasnip", -- for autocompletion
-		"rafamadriz/friendly-snippets", -- useful snippets
 		"onsails/lspkind.nvim", -- vs-code like pictograms
 	},
-	config = function()
+	opts = function()
 		local cmp = require("cmp")
-
+		local auto_select = true
 		local luasnip = require("luasnip")
-
 		local lspkind = require("lspkind")
 
 		-- loads vscode style snippets from installed plugins (e.g. friendly-snippets)
 		require("luasnip.loaders.from_vscode").lazy_load()
 
 		cmp.setup({
+			auto_brackets = {}, -- configure any filetype to auto add brackets
 			completion = {
-				completeopt = "menu,menuone,preview,noselect",
+				completeopt = "menu,menuone,noinsert" .. (auto_select and "" or ",noselect"),
 			},
 			snippet = { -- configure how nvim-cmp interacts with snippet engine
 				expand = function(args)

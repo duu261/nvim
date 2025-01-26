@@ -1,7 +1,6 @@
 vim.g.mapleader = " "
 
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>") -- Exit terminal mode
--- vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 vim.keymap.set("n", "<leader><leader>", function()
 	vim.cmd("so")
 end, { desc = "Source current file " })
@@ -31,7 +30,7 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll half-page up and center
 vim.keymap.set("n", "n", "nzzzv", { desc = "Search next occurrence and center" })
 vim.keymap.set("n", "N", "Nzzzv", { desc = "Search previous occurrence and center" })
 
--- vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { desc = "Format code with LSP" })
+vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { desc = "Format code with LSP" })
 
 vim.keymap.set("n", "<C-j>", "<cmd>cnext<CR>zz", { desc = "Go to next quickfix item and center" })
 vim.keymap.set("n", "<C-k>", "<cmd>cprev<CR>zz", { desc = "Go to previous quickfix item and center" })
@@ -53,3 +52,7 @@ vim.keymap.set(
 -- -- Remap for dealing with word wrap
 vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
+-- better indenting
+vim.keymap.set("v", "<", "<gv")
+vim.keymap.set("v", ">", ">gv")
+vim.keymap.set("n", "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", { desc = "Add Comment Above" })
