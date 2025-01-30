@@ -6,7 +6,7 @@ return {
 			override = {
 				["vim.lsp.util.convert_input_to_markdown_lines"] = true,
 				["vim.lsp.util.stylize_markdown"] = true,
-				["cmp.entry.get_documentation"] = true,
+				["cmp.entry.get_documentation"] = false,
 			},
 		},
 		routes = {
@@ -37,8 +37,8 @@ return {
     { "<leader>sna", function() require("noice").cmd("all") end, desc = "Noice All" },
     { "<leader>snd", function() require("noice").cmd("dismiss") end, desc = "Dismiss All" },
     { "<leader>snt", function() require("noice").cmd("pick") end, desc = "Noice Picker (Telescope/FzfLua)" },
-    { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll Forward", mode = {"i", "n", "s"} },
-    { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll Backward", mode = {"i", "n", "s"}},
+    { "<c-n>", function() if not require("noice.lsp").scroll(4) then return "<c-n>" end end, silent = true, expr = true, desc = "Scroll Forward", mode = {"i", "n", "s"} },
+    { "<c-p>", function() if not require("noice.lsp").scroll(-4) then return "<c-p>" end end, silent = true, expr = true, desc = "Scroll Backward", mode = {"i", "n", "s"}},
   },
 	config = function(_, opts)
 		-- HACK: noice shows messages from before it was enabled,

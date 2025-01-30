@@ -25,7 +25,19 @@ return {
 				section_separators = "",
 				component_separators = "⎮",
 				globalstatus = vim.o.laststatus == 3,
-				disabled_filetypes = { statusline = { "dashboard", "alpha" } },
+				disabled_filetypes = {
+					statusline = { "dashboard", "alpha" },
+					winbar = {
+						"dap-repl",
+						"dapui_console",
+						"dapui_watches",
+						"dapui_stacks",
+						"dapui_breakpoints",
+						"dapui_scopes",
+						"dashboard",
+						"alpha",
+					},
+				},
 			},
 			sections = {
 				lualine_a = { "mode" },
@@ -92,6 +104,9 @@ return {
 				},
 			},
 			extensions = { "nvim-dap-ui", "oil", "lazy", "trouble" },
+			winbar = {
+				lualine_c = {},
+			},
 		}
 
 		local trouble = require("trouble")
@@ -103,7 +118,7 @@ return {
 			format = "{kind_icon}{symbol.name:Normal}",
 			hl_group = "lualine_c_normal",
 		})
-		table.insert(opts.sections.lualine_c, {
+		table.insert(opts.winbar.lualine_c, {
 			symbols and symbols.get,
 			cond = function()
 				return vim.b.trouble_lualine ~= false and symbols.has()
