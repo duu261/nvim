@@ -34,7 +34,7 @@ return {
 		opts = {
 			strategies = {
 				chat = {
-					adapter = "copilot",
+					adapter = "ollama",
 					roles = {
 						llm = "CodeCompanion",
 						user = "Duu",
@@ -45,7 +45,7 @@ return {
 		},
 		keys = {
 			{
-				"<leader>cc",
+				"<leader>ct",
 				"<cmd>CodeCompanionActions<cr>",
 				mode = { "n", "v" },
 				noremap = true,
@@ -53,7 +53,7 @@ return {
 				desc = "CodeCompanion actions",
 			},
 			{
-				"<leader>ct",
+				"<leader>cc",
 				"<cmd>CodeCompanionChat Toggle<cr>",
 				mode = { "n", "v" },
 				noremap = true,
