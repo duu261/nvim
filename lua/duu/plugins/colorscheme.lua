@@ -5,6 +5,7 @@ return {
 		priority = 1000,
 		config = function()
 			require("catppuccin").setup({
+				flavour = "macchiato",
 				transparent_background = false, -- disables setting the background color.
 				dim_inactive = {
 					enabled = true, -- dims the background color of inactive window
@@ -26,7 +27,7 @@ return {
 			})
 
 			-- setup must be called before loading
-			vim.cmd.colorscheme("catppuccin-macchiato")
+			vim.cmd.colorscheme("catppuccin")
 		end,
 		lazy = false,
 	},
