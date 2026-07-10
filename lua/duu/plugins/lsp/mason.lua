@@ -31,15 +31,16 @@ return {
 				-- "isort", -- python formatter
 				-- "black", -- python formatter
 				-- "pylint", -- python linter
-				-- "eslint_d", -- js linter
-				-- "tsserver",
-				-- "html",
-				-- "cssls",
-				-- "jsonls",
-				-- "bashls",
+				"eslint_d", -- js linter
+				"html",
+				"tailwindcss",
+				"vtsls",
+				"cssls",
+				"jsonls",
+				"bashls",
 				"lua_ls",
-				-- "yamlls",
-				-- "dockerls",
+				"yamlls",
+				"dockerls",
 				"google-java-format",
 				"jdtls",
 				"vscode-spring-boot-tools",

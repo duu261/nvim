@@ -55,6 +55,12 @@ return {
 				},
 				lualine_x = {
 					{
+						require("clide.status").lualine,
+						cond = function()
+							return require("clide").state.server ~= nil
+						end,
+					},
+					{
 						function()
 							return require("noice").api.status.command.get()
 						end,

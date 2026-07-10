@@ -23,6 +23,10 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = "Move selected lines up" }
 vim.keymap.set("n", "J", "mzJ`z", { desc = "Join lines without moving cursor" })
 
 vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>", { desc = "Open tmux sessionizer" })
+vim.keymap.set("n", "<M-h>", "<cmd>silent !tmux neww tmux-sessionizer -s 0<CR>", { desc = "Sessionizer: nvim window" })
+vim.keymap.set("n", "<M-j>", "<cmd>silent !tmux neww tmux-sessionizer -s 1<CR>", { desc = "Sessionizer: claude window" })
+vim.keymap.set("n", "<M-k>", "<cmd>silent !tmux neww tmux-sessionizer -s 2<CR>", { desc = "Sessionizer: lazygit window" })
+vim.keymap.set("n", "<M-l>", "<cmd>silent !tmux neww tmux-sessionizer -s 3<CR>", { desc = "Sessionizer: htop window" })
 vim.keymap.set("n", "<C-c>", "<cmd>nohlsearch<CR>", { desc = "Clear highlight search" })
 
 vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "Scroll half-page down and center" })
