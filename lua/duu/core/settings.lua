@@ -80,3 +80,20 @@ end
 
 -- Fix markdown indentation settings
 vim.g.markdown_recommended_style = 0
+
+-- Over ssh there is no wayland clipboard; use OSC52 so yanks land in the
+-- local terminal's clipboard (nvim 0.10+ builtin). Local sessions keep the
+-- default provider (wl-clipboard).
+if vim.env.SSH_CONNECTION then
+	vim.g.clipboard = {
+		name = "osc52",
+		copy = {
+			["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+			["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+		},
+		paste = {
+			["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+			["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+		},
+	}
+end
