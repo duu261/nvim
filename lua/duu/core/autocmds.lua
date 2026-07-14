@@ -13,11 +13,15 @@ autocmd("TextYankPost", {
 
 local DuuGroup = augroup("Duu", {})
 
--- auto remove trailing white space
+-- auto remove trailing white space (keep cursor/view in place)
 autocmd({ "BufWritePre" }, {
 	group = DuuGroup,
 	pattern = "*",
-	command = [[%s/\s\+$//e]],
+	callback = function()
+		local view = vim.fn.winsaveview()
+		vim.cmd([[keeppatterns %s/\s\+$//e]])
+		vim.fn.winrestview(view)
+	end,
 })
 -- Filetype association for Hyprland config files
 vim.filetype.add({

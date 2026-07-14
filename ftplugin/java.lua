@@ -6,6 +6,9 @@ if not vim.endswith(filename, ".java") then
 	return
 end
 
+-- google-java-format wraps at 100, not 80
+vim.opt_local.colorcolumn = "100"
+
 -- Native gf trick
 vim.opt_local.path:append({ "src/main/java/**", "src/test/java/**", "**/src/main/java/**", "**/src/test/java/**" })
 vim.opt_local.include = [[^\s*import]]

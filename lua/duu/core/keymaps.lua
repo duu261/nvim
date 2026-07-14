@@ -34,10 +34,9 @@ vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "Scroll half-page up and center
 vim.keymap.set("n", "n", "nzzzv", { desc = "Search next occurrence and center" })
 vim.keymap.set("n", "N", "Nzzzv", { desc = "Search previous occurrence and center" })
 
-vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { desc = "Format code with LSP" })
-
-vim.keymap.set("n", "<C-j>", "<cmd>cnext<CR>zz", { desc = "Go to next quickfix item and center" })
-vim.keymap.set("n", "<C-k>", "<cmd>cprev<CR>zz", { desc = "Go to previous quickfix item and center" })
+-- quickfix nav: C-j/C-k belong to smart-splits now
+vim.keymap.set("n", "]q", "<cmd>cnext<CR>zz", { desc = "Go to next quickfix item and center" })
+vim.keymap.set("n", "[q", "<cmd>cprev<CR>zz", { desc = "Go to previous quickfix item and center" })
 vim.keymap.set("n", "<leader>k", "<cmd>lnext<CR>zz", { desc = "Go to next location list item and center" })
 vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz", { desc = "Go to previous location list item and center" })
 
