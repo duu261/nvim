@@ -1,7 +1,7 @@
 return {
-	"williamboman/mason.nvim",
+	"mason-org/mason.nvim",
 	dependencies = {
-		"williamboman/mason-lspconfig.nvim",
+		"mason-org/mason-lspconfig.nvim",
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		"mfussenegger/nvim-jdtls",
 	},
@@ -21,6 +21,8 @@ return {
 		mason_lspconfig.setup({
 			-- list of servers for mason to install
 			ensure_installed = {},
+			-- jdtls is started manually in ftplugin/java.lua, keep it out of auto-enable
+			automatic_enable = { exclude = { "jdtls" } },
 		})
 		mason_tool_installer.setup({
 			ensure_installed = {
