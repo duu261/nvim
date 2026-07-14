@@ -62,6 +62,7 @@ return {
 			end,
 			desc = "Grep user input",
 		},
+		{ "<leader>pl", "<cmd>Telescope live_grep<cr>", desc = "Live grep project" },
 		{ "<leader>vh", "<cmd>Telescope help_tags<cr>", desc = "Search Help Tags" },
 		{ "<leader>pt", "<cmd>TodoTelescope<cr>", desc = "Find todos" },
 	},
