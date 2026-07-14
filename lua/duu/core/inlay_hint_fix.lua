@@ -1,26 +1,18 @@
--- Hack to fix Neovim core inlay hint out of bounds column error while typing asynchronously
+-- Hack to fix Neovim core inlay hint out of bounds errors while typing asynchronously
+-- (async LSP responses can reference lines/cols that no longer exist)
+local inlay_ns = vim.api.nvim_create_namespace("nvim.lsp.inlayhint")
 local original_set_extmark = vim.api.nvim_buf_set_extmark
 vim.api.nvim_buf_set_extmark = function(buffer, ns_id, line, col, opts)
-	-- only intercept inlay hints namespace
-	local is_inlay_ns = false
-	if ns_id then
-		for ns_name, id in pairs(vim.api.nvim_get_namespaces()) do
-			if id == ns_id and ns_name == "nvim.lsp.inlayhint" then
-				is_inlay_ns = true
-				break
-			end
+	if ns_id == inlay_ns then
+		-- clamp line to buffer end (lines deleted since hint was computed)
+		local line_count = vim.api.nvim_buf_line_count(buffer)
+		if line >= line_count then
+			line = math.max(line_count - 1, 0)
 		end
-	end
-
-	if is_inlay_ns then
-		local line_length = 0
+		-- clamp col to end of line
 		local success, lines = pcall(vim.api.nvim_buf_get_lines, buffer, line, line + 1, false)
-		if success and lines and lines[1] then
-			line_length = #lines[1]
-		end
-		-- Check if the column is out of range to prevent the crash
+		local line_length = (success and lines and lines[1]) and #lines[1] or 0
 		if col > line_length then
-			-- clamp to end of line or ignore
 			col = line_length
 		end
 	end
