@@ -28,7 +28,6 @@ return {
 		require("luasnip.loaders.from_vscode").lazy_load()
 
 		cmp.setup({
-			auto_brackets = {}, -- configure any filetype to auto add brackets
 			completion = {
 				completeopt = "menu,menuone,noinsert" .. (auto_select and "" or ",noselect"),
 			},

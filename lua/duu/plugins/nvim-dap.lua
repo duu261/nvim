@@ -1,36 +1,3 @@
-vim.api.nvim_create_augroup("DapGroup", { clear = true })
-
-local function navigate(args)
-	local buffer = args.buf
-
-	local wid = nil
-	local win_ids = vim.api.nvim_list_wins() -- Get all window IDs
-	for _, win_id in ipairs(win_ids) do
-		local win_bufnr = vim.api.nvim_win_get_buf(win_id)
-		if win_bufnr == buffer then
-			wid = win_id
-		end
-	end
-
-	if wid == nil then
-		return
-	end
-
-	vim.schedule(function()
-		if vim.api.nvim_win_is_valid(wid) then
-			vim.api.nvim_set_current_win(wid)
-		end
-	end)
-end
-
-local function create_nav_options(name)
-	return {
-		group = "DapGroup",
-		pattern = string.format("*%s*", name),
-		callback = navigate,
-	}
-end
-
 return {
 	{
 		"mfussenegger/nvim-dap",
