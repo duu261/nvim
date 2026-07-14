@@ -149,7 +149,7 @@ local cmd = {
 	"-Dosgi.bundles.defaultStartLevel=4",
 	"-Declipse.product=org.eclipse.jdt.ls.core.product",
 	"-Dlog.protocol=true",
-	"-Dlog.level=ALL",
+	"-Dlog.level=ERROR",
 	"-XX:+UseTransparentHugePages",
 	"-XX:+AlwaysPreTouch",
 	"-Xmx1g",
@@ -170,10 +170,15 @@ local settings = {
 		maxConcurrentBuilds = 8,
 		eclipse = { downloadSource = true },
 		maven = { downloadSources = true },
-		signatureHelp = { enabled = true },
+		signatureHelp = { enabled = true, description = { enabled = true } },
+		compile = { nullAnalysis = { mode = "automatic" } },
+		references = { includeDecompiledSources = true },
+		implementationsCodeLens = { enabled = true },
 		contentProvider = { preferred = "fernflower" },
 		saveActions = { organizeImports = true },
 		completion = {
+			guessMethodArguments = true, -- insert argument placeholders on method completion, IDE-style
+			postfix = { enabled = true }, -- e.g. `expr.var<Tab>`, `expr.if<Tab>` templates
 			favoriteStaticMembers = {
 				"org.hamcrest.MatcherAssert.assertThat",
 				"org.hamcrest.Matchers.*",
@@ -211,7 +216,7 @@ local settings = {
 				{ name = "JavaSE-22", path = os.getenv("JDK22") },
 				{ name = "JavaSE-23", path = os.getenv("JDK23") },
 			},
-			updateBuildConfiguration = "interactive",
+			updateBuildConfiguration = "automatic", -- re-sync classpath on pom/gradle edits, no prompt
 		},
 		test = {
 			defaultVMArgs = "-Xshare:off -XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage"
@@ -240,7 +245,6 @@ local on_attach = function(client, bufnr)
 			},
 		},
 	})
-	require("jdtls.setup").add_commands()
 
 	if vim.lsp.codelens.enable then
 		pcall(vim.lsp.codelens.enable, true, { bufnr = bufnr })

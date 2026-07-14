@@ -20,6 +20,12 @@ return {
 				liquid = { "prettier" },
 				lua = { "stylua" },
 				python = { "isort", "black" },
+				java = { "google-java-format" },
+			},
+			formatters = {
+				["google-java-format"] = {
+					prepend_args = { "--aosp" }, -- 4-space indent, matches tabs=4 preference
+				},
 			},
 			format_on_save = {
 				timeout_ms = 5000,
