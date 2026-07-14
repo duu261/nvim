@@ -50,6 +50,17 @@ local function get_bundles()
 		end
 	end
 
+	-- fernflower decompiler; without these jars contentProvider="fernflower" is inert
+	local ok, decompiler = pcall(mason_registry.get_package, "vscode-java-decompiler")
+	if ok and decompiler:is_installed() then
+		local path = decompiler:get_install_path()
+		for _, jar in ipairs(vim.split(vim.fn.glob(path .. "/server/*.jar", 1), "\n")) do
+			if jar ~= "" then
+				table.insert(bundles, jar)
+			end
+		end
+	end
+
 	vim.list_extend(bundles, require("spring_boot").java_extensions())
 	return bundles
 end
@@ -121,6 +132,15 @@ local function java_keymaps(client, bufnr)
 	map("v", "<leader>Jm", "<Esc><Cmd>lua require('jdtls').extract_method(true)<CR>", { desc = "[J]ava Extract [M]ethod" })
 	map("n", "<leader>JM", "<Cmd>lua require('jdtls').extract_variable_all()<CR>", { desc = "[J]ava Extract Variable (All)" })
 	map("v", "<leader>JM", "<Esc><Cmd>lua require('jdtls').extract_variable_all(true)<CR>", { desc = "[J]ava Extract Variable (All)" })
+	map("n", "<leader>Jr", function()
+		local root = vim.fs.root(0, { "mvnw", "pom.xml" }) or vim.fn.getcwd()
+		local mvn = vim.uv.fs_stat(root .. "/mvnw") and "./mvnw" or "mvn"
+		local ok, pom = pcall(vim.fn.readfile, root .. "/pom.xml")
+		local goal = (ok and table.concat(pom, "\n"):find("spring%-boot")) and "spring-boot:run"
+			or "compile exec:java"
+		-- shell stays open after the app exits so crash output survives
+		vim.fn.jobstart({ "tmux", "neww", "-n", "run", "-c", root, mvn .. " " .. goal .. "; exec $SHELL" })
+	end, { desc = "[J]ava [R]un app in tmux window" })
 	map("n", "<leader>Jg", "<Cmd>lua require('jdtls.tests').generate()<CR>", { desc = "[J]ava [G]enerate Tests" })
 	map("n", "<leader>Js", "<Cmd>lua require('jdtls.tests').goto_subjects()<CR>", { desc = "[J]ava Go to [S]ubject" })
 end
@@ -209,13 +229,24 @@ local settings = {
 		},
 		project = { sourcePaths = { "src" } },
 		configuration = {
-			runtimes = {
-				{ name = "JavaSE-1.8", path = os.getenv("JDK8") },
-				{ name = "JavaSE-17", path = os.getenv("JDK17") },
-				{ name = "JavaSE-21", path = os.getenv("JDK21"), default = true },
-				{ name = "JavaSE-22", path = os.getenv("JDK22") },
-				{ name = "JavaSE-23", path = os.getenv("JDK23") },
-			},
+			-- only offer runtimes whose env var is actually set
+			runtimes = (function()
+				local runtimes = {}
+				local candidates = {
+					{ name = "JavaSE-1.8", env = "JDK8" },
+					{ name = "JavaSE-17", env = "JDK17" },
+					{ name = "JavaSE-21", env = "JDK21", default = true },
+					{ name = "JavaSE-22", env = "JDK22" },
+					{ name = "JavaSE-23", env = "JDK23" },
+				}
+				for _, c in ipairs(candidates) do
+					local path = os.getenv(c.env)
+					if path and path ~= "" then
+						table.insert(runtimes, { name = c.name, path = path, default = c.default })
+					end
+				end
+				return runtimes
+			end)(),
 			updateBuildConfiguration = "automatic", -- re-sync classpath on pom/gradle edits, no prompt
 		},
 		test = {
@@ -256,13 +287,10 @@ local on_attach = function(client, bufnr)
 		pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
 	end
 
-	vim.api.nvim_create_autocmd("BufWritePre", {
-		buffer = bufnr,
-		desc = "Auto-organize imports on save",
-		callback = function()
-			require("jdtls").organize_imports()
-		end,
-	})
+	-- NOTE: no organize-imports-on-save autocmd: google-java-format (conform,
+	-- BufWritePre) already sorts and removes unused imports synchronously; the
+	-- async organize_imports() raced it and could dirty the buffer after save.
+	-- <leader>Jo still adds missing imports on demand.
 end
 
 require("jdtls").start_or_attach({

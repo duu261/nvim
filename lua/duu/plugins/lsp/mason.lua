@@ -45,6 +45,7 @@ return {
 				"dockerls",
 				"google-java-format",
 				"jdtls",
+				"vscode-java-decompiler",
 				"vscode-spring-boot-tools",
 				"lemminx",
 			},
