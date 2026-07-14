@@ -30,56 +30,56 @@ return {
 				desc = "Toggle quick menu for Harpoon list",
 			},
 			{
-				"<leader><C-h>",
+				"<leader><M-h>",
 				function()
 					require("harpoon"):list():replace_at(1)
 				end,
 				desc = "Replace file at position 1 in Harpoon list",
 			},
 			{
-				"<leader><C-t>",
+				"<leader><M-j>",
 				function()
 					require("harpoon"):list():replace_at(2)
 				end,
 				desc = "Replace file at position 2 in Harpoon list",
 			},
 			{
-				"<leader><C-n>",
+				"<leader><M-k>",
 				function()
 					require("harpoon"):list():replace_at(3)
 				end,
 				desc = "Replace file at position 3 in Harpoon list",
 			},
 			{
-				"<leader><C-s>",
+				"<leader><M-l>",
 				function()
 					require("harpoon"):list():replace_at(4)
 				end,
 				desc = "Replace file at position 4 in Harpoon list",
 			},
 			{
-				"<C-h>",
+				"<M-h>",
 				function()
 					require("harpoon"):list():select(1)
 				end,
 				desc = "Select file at position 1 from Harpoon list",
 			},
 			{
-				"<C-t>",
+				"<M-j>",
 				function()
 					require("harpoon"):list():select(2)
 				end,
 				desc = "Select file at position 2 from Harpoon list",
 			},
 			{
-				"<C-n>",
+				"<M-k>",
 				function()
 					require("harpoon"):list():select(3)
 				end,
 				desc = "Select file at position 3 from Harpoon list",
 			},
 			{
-				"<C-s>",
+				"<M-l>",
 				function()
 					require("harpoon"):list():select(4)
 				end,
