@@ -2,6 +2,7 @@ return {
 	{
 		dir = "~/Projects/clide.nvim", -- local checkout, no fetch
 		name = "clide.nvim",
+		cond = vim.fn.isdirectory(vim.fn.expand("~/Projects/clide.nvim")) == 1, -- skip cleanly where checkout absent
 		lazy = false, -- commands register at startup, no eager server
 		config = function()
 			require("clide").setup({
