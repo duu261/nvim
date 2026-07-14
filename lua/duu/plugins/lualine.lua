@@ -48,16 +48,20 @@ return {
 					{
 						icon = "󰇥",
 						"harpoon2",
-						indicators = { "h", "t", "n", "s" },
-						active_indicators = { "H", "T", "N", "S" },
+						indicators = { "h", "j", "k", "l" },
+						active_indicators = { "H", "J", "K", "L" },
 						_separator = " ",
 					},
 				},
 				lualine_x = {
 					{
-						require("clide.status").lualine,
+						-- lazy require: clide is cond-guarded and may not be installed
+						function()
+							return require("clide.status").lualine()
+						end,
 						cond = function()
-							return require("clide").state.server ~= nil
+							local ok, clide = pcall(require, "clide")
+							return ok and clide.state.server ~= nil
 						end,
 					},
 					{
