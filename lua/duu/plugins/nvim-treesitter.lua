@@ -56,18 +56,24 @@ return {
 	},
 	{
 		"nvim-treesitter/nvim-treesitter-textobjects",
+		branch = "main",
 		lazy = false,
 		config = function()
 			require("nvim-treesitter-textobjects").setup({
 				select = {
-					enable = true,
 					lookahead = true,
-					keymaps = {
-						["af"] = "@function.outer",
-						["if"] = "@function.inner",
-					},
 				},
 			})
+			-- main branch dropped the keymaps table; bindings are manual now
+			local function select(query)
+				return function()
+					require("nvim-treesitter-textobjects.select").select_textobject(query, "textobjects")
+				end
+			end
+			vim.keymap.set({ "x", "o" }, "af", select("@function.outer"), { desc = "outer function" })
+			vim.keymap.set({ "x", "o" }, "if", select("@function.inner"), { desc = "inner function" })
+			vim.keymap.set({ "x", "o" }, "ac", select("@class.outer"), { desc = "outer class" })
+			vim.keymap.set({ "x", "o" }, "ic", select("@class.inner"), { desc = "inner class" })
 		end,
 	},
 }
