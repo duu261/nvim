@@ -28,7 +28,7 @@ return {
 			ensure_installed = {
 				"prettier", -- prettier formatter
 				"java-debug-adapter",
-				"java-test",
+				-- java-test is optional; neotest-java uses its own JUnit runner
 				"stylua", -- lua formatter
 				-- "isort", -- python formatter
 				-- "black", -- python formatter

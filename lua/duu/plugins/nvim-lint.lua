@@ -5,7 +5,6 @@ return {
 		local lint = require("lint")
 
 		lint.linters_by_ft = {
-			java = { "checkstyle" },
 			javascript = { "eslint_d" },
 			typescript = { "eslint_d" },
 			javascriptreact = { "eslint_d" },
@@ -17,16 +16,7 @@ return {
 		vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
 			group = lint_augroup,
 			callback = function()
-				-- Only run checkstyle if there is actually a checkstyle.xml in the project
-				if vim.bo.filetype == "java" then
-					local checkstyle_xml = vim.fn.findfile("checkstyle.xml", ".;")
-					local google_xml = vim.fn.findfile("google_checks.xml", ".;")
-					if checkstyle_xml ~= "" or google_xml ~= "" then
-						lint.try_lint()
-					end
-				else
-					lint.try_lint()
-				end
+				lint.try_lint()
 			end,
 		})
 

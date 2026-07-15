@@ -9,6 +9,10 @@ end
 -- google-java-format wraps at 100, not 80
 vim.opt_local.colorcolumn = "100"
 
+-- java-test bundles can version-skew with JDTLS. Maven/neotest remain the
+-- default; opt in only when the installed JDTLS and java-test bundles match.
+local enable_jdtls_tests = vim.g.java_jdtls_tests == true
+
 -- Native gf trick
 vim.opt_local.path:append({ "src/main/java/**", "src/test/java/**", "**/src/main/java/**", "**/src/test/java/**" })
 vim.opt_local.include = [[^\s*import]]
@@ -41,15 +45,28 @@ local function get_bundles()
 		vim.fn.glob(java_debug_path .. "/extension/server/com.microsoft.java.debug.plugin-*.jar", 1),
 	}
 
-	local java_test_path = mason_registry.get_package("java-test"):get_install_path()
-	-- these two jars cause classloader conflicts when loaded as bundles
-	local excluded = {
-		"com.microsoft.java.test.runner-jar-with-dependencies.jar",
-		"jacocoagent.jar",
-	}
-	for _, jar in ipairs(vim.split(vim.fn.glob(java_test_path .. "/extension/server/*.jar", 1), "\n")) do
-		if not vim.tbl_contains(excluded, vim.fn.fnamemodify(jar, ":t")) then
-			table.insert(bundles, jar)
+	if enable_jdtls_tests then
+		local ok, java_test = pcall(mason_registry.get_package, "java-test")
+		if not ok or not java_test:is_installed() then
+			enable_jdtls_tests = false
+			vim.notify("JDTLS tests disabled: java-test is not installed", vim.log.levels.WARN)
+		else
+			local java_test_path = java_test:get_install_path()
+			local java_test_bundles = vim.fn.glob(java_test_path .. "/extension/server/*.jar", true, true)
+			if #java_test_bundles == 0 then
+				enable_jdtls_tests = false
+				vim.notify("JDTLS tests disabled: java-test bundles not found", vim.log.levels.WARN)
+			end
+			-- these two jars cause classloader conflicts when loaded as bundles
+			local excluded = {
+				"com.microsoft.java.test.runner-jar-with-dependencies.jar",
+				"jacocoagent.jar",
+			}
+			for _, jar in ipairs(java_test_bundles) do
+				if not vim.tbl_contains(excluded, vim.fn.fnamemodify(jar, ":t")) then
+					table.insert(bundles, jar)
+				end
+			end
 		end
 	end
 
@@ -191,24 +208,31 @@ local function java_keymaps(client, bufnr)
 			jdtls.test_nearest_method(opts)
 		end)()
 	end
-	map("n", "<leader>Jt", function()
-		test_method(vim.api.nvim_win_get_cursor(0)[1])
-	end, { desc = "[J]ava [T]est Method" })
-	map("v", "<leader>Jt", function()
-		test_method(vim.fn.line("'<"))
-	end, { desc = "[J]ava [T]est Method" })
-	map(
-		"n",
-		"<leader>JT",
-		with_compile(function()
-			jdtls.test_class(test_opts)
-		end),
-		{ desc = "[J]ava [T]est Class" }
-	)
-	map("n", "<leader>Jp", with_compile(test_with_profile(jdtls.test_class)), { desc = "[J]ava Test with [P]rofile" })
-	map("n", "<leader>JP", function()
-		require("jdtls.dap").pick_test()
-	end, { desc = "[J]ava [P]ick Test" })
+	if enable_jdtls_tests then
+		map("n", "<leader>Jt", function()
+			test_method(vim.api.nvim_win_get_cursor(0)[1])
+		end, { desc = "[J]ava [T]est Method" })
+		map("v", "<leader>Jt", function()
+			test_method(vim.fn.line("'<"))
+		end, { desc = "[J]ava [T]est Method" })
+		map(
+			"n",
+			"<leader>JT",
+			with_compile(function()
+				jdtls.test_class(test_opts)
+			end),
+			{ desc = "[J]ava [T]est Class" }
+		)
+		map(
+			"n",
+			"<leader>Jp",
+			with_compile(test_with_profile(jdtls.test_class)),
+			{ desc = "[J]ava Test with [P]rofile" }
+		)
+		map("n", "<leader>JP", function()
+			require("jdtls.dap").pick_test()
+		end, { desc = "[J]ava [P]ick Test" })
+	end
 	map("n", "<leader>Ju", "<Cmd>JdtUpdateConfig<CR>", { desc = "[J]ava [U]pdate Config" })
 	map(
 		"v",
@@ -261,8 +285,15 @@ local function java_keymaps(client, bufnr)
 		-- shell stays open after the app exits so crash output survives
 		vim.fn.jobstart({ "tmux", "neww", "-n", "run", "-c", root, command .. "; exec $SHELL" })
 	end, { desc = "[J]ava [R]un app in tmux window" })
-	map("n", "<leader>Jg", "<Cmd>lua require('jdtls.tests').generate()<CR>", { desc = "[J]ava [G]enerate Tests" })
-	map("n", "<leader>Js", "<Cmd>lua require('jdtls.tests').goto_subjects()<CR>", { desc = "[J]ava Go to [S]ubject" })
+	if enable_jdtls_tests then
+		map("n", "<leader>Jg", "<Cmd>lua require('jdtls.tests').generate()<CR>", { desc = "[J]ava [G]enerate Tests" })
+		map(
+			"n",
+			"<leader>Js",
+			"<Cmd>lua require('jdtls.tests').goto_subjects()<CR>",
+			{ desc = "[J]ava Go to [S]ubject" }
+		)
+	end
 end
 
 local jdtls = require("jdtls")
@@ -307,7 +338,9 @@ end
 local java_cmd = launcher_home and (launcher_home .. "/bin/java") or "java"
 
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
-capabilities.workspace = { configuration = true }
+capabilities.workspace = vim.tbl_deep_extend("force", capabilities.workspace or {}, {
+	configuration = true,
+})
 
 local extendedClientCapabilities = jdtls.extendedClientCapabilities
 extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
@@ -319,6 +352,10 @@ local cmd = {
 	"-Declipse.application=org.eclipse.jdt.ls.core.id1",
 	"-Dosgi.bundles.defaultStartLevel=4",
 	"-Declipse.product=org.eclipse.jdt.ls.core.product",
+	"-Dosgi.checkConfiguration=true",
+	"-Dosgi.sharedConfiguration.area=" .. os_config,
+	"-Dosgi.sharedConfiguration.area.readOnly=true",
+	"-Dosgi.configuration.cascaded=true",
 	"-Dlog.protocol=true",
 	"-Dlog.level=ERROR",
 	"-XX:+UseTransparentHugePages",
@@ -333,7 +370,7 @@ local cmd = {
 if vim.fn.filereadable(lombok) == 1 then
 	table.insert(cmd, "-javaagent:" .. lombok)
 end
-vim.list_extend(cmd, { "-jar", launcher, "-configuration", os_config, "-data", workspace_dir })
+vim.list_extend(cmd, { "-jar", launcher, "-data", workspace_dir })
 
 local settings = {
 	java = {
@@ -397,20 +434,24 @@ local settings = {
 			end)(),
 			updateBuildConfiguration = "automatic", -- re-sync classpath on pom/gradle edits, no prompt
 		},
-		test = {
-			defaultVMArgs = "-Xshare:off -XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage",
-		},
 		referencesCodeLens = { enabled = true },
 		inlayHints = { parameterNames = { enabled = "all" } },
 	},
 }
+if enable_jdtls_tests then
+	settings.java.test = {
+		defaultVMArgs = "-Xshare:off -XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage",
+	}
+end
 
 local on_attach = function(client, bufnr)
 	java_keymaps(client, bufnr)
 
-	vim.api.nvim_buf_create_user_command(bufnr, "A", function()
-		require("jdtls.tests").goto_subjects()
-	end, { desc = "Alternate between Test and Subject" })
+	if enable_jdtls_tests then
+		vim.api.nvim_buf_create_user_command(bufnr, "A", function()
+			require("jdtls.tests").goto_subjects()
+		end, { desc = "Alternate between Test and Subject" })
+	end
 
 	if vim.lsp.codelens.enable then
 		pcall(vim.lsp.codelens.enable, true, { bufnr = bufnr })
