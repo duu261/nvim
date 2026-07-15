@@ -2,7 +2,6 @@ require("duu.core.settings")
 require("duu.core.keymaps")
 require("duu.core.autocmds")
 require("duu.core.commands")
-require("duu.core.inlay_hint_fix")
 
 function R(name)
 	require("plenary.reload").reload_module(name)

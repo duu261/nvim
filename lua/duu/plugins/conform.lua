@@ -23,7 +23,6 @@ return {
 				graphql = { "prettier" },
 				liquid = { "prettier" },
 				lua = { "stylua" },
-				python = { "isort", "black" },
 				java = { "google-java-format" },
 			},
 			formatters = {

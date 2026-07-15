@@ -30,9 +30,6 @@ return {
 				"java-debug-adapter",
 				-- java-test is optional; neotest-java uses its own JUnit runner
 				"stylua", -- lua formatter
-				-- "isort", -- python formatter
-				-- "black", -- python formatter
-				-- "pylint", -- python linter
 				"eslint_d", -- js linter
 				"html",
 				"tailwindcss",
