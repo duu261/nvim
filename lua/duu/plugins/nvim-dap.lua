@@ -29,6 +29,10 @@ return {
 			vim.keymap.set("n", "<leader>dq", dap.terminate, { desc = "Debug: Quit/Terminate" })
 
 			vim.api.nvim_create_user_command("DapVisualize", function(opts)
+				if vim.fn.executable("dot") ~= 1 then
+					vim.notify("DapVisualize requires Graphviz 'dot'", vim.log.levels.ERROR)
+					return
+				end
 				local varname = opts.args ~= "" and opts.args or vim.fn.expand("<cexpr>")
 				local child_names = vim.split(vim.fn.input({ prompt = "Child Properties: " }), " ")
 				local property_names = vim.split(vim.fn.input({ prompt = "Properties: " }), " ")
@@ -44,36 +48,73 @@ return {
 				if not variable then
 					return
 				end
-				local f = assert(io.open("/tmp/dap.gv", "w"), "Must be able to open file")
+				local graph_file = vim.fn.tempname() .. ".gv"
+				local f, open_error = io.open(graph_file, "w")
+				if not f then
+					vim.notify("DapVisualize could not create graph: " .. tostring(open_error), vim.log.levels.ERROR)
+					return
+				end
 				coroutine.wrap(function()
 					f:write("digraph G {\n  graph [ layout=dot labelloc=t ]\n")
+					local expanded = {}
+					local function escape_dot(value)
+						local text = tostring(value or "")
+						text = text:gsub("\\", "\\\\")
+						text = text:gsub('"', '\\"')
+						text = text:gsub("\r", "")
+						return (text:gsub("\n", "\\n"))
+					end
+					local function escape_html(value)
+						local text = tostring(value or "")
+						text = text:gsub("&", "&amp;")
+						text = text:gsub("<", "&lt;")
+						text = text:gsub(">", "&gt;")
+						text = text:gsub('"', "&quot;")
+						text = text:gsub("\r", "")
+						return (text:gsub("\n", "&#10;"))
+					end
 					local function get_children(v)
-						if v.variablesReference == 0 then
+						if not v or not v.variablesReference or v.variablesReference == 0 then
 							return {}
 						end
-						local err, result = session:request("variables", { variablesReference = v.variablesReference })
+						local _, result = session:request("variables", { variablesReference = v.variablesReference })
 						return result and result.variables or {}
 					end
 					local function resolve_lazy(v)
 						if (v.presentationHint or {}).lazy then
 							local resolved = get_children(v)[1]
+							if not resolved then
+								return v
+							end
+							resolved = vim.deepcopy(resolved)
 							resolved.name = v.name
 							return resolved
 						end
 						return v
 					end
 					local function add_children(parent, parent_name)
+						local reference = parent.variablesReference
+						if reference and reference ~= 0 then
+							if expanded[reference] then
+								return
+							end
+							expanded[reference] = true
+						end
 						local children = get_children(parent)
 						parent_name = parent_name or parent.name
 						local property_values = {}
 						for _, var in pairs(children) do
 							if vim.tbl_contains(property_names, var.name) then
-								if var.variablesReference > 0 then
+								if (var.variablesReference or 0) > 0 then
 									for _, child_var in pairs(get_children(var)) do
-										table.insert(property_values, var.name .. ": " .. resolve_lazy(child_var).value)
+										local resolved = resolve_lazy(child_var)
+										table.insert(
+											property_values,
+											escape_html(var.name .. ": " .. tostring(resolved.value or ""))
+										)
 									end
 								else
-									table.insert(property_values, var.value)
+									table.insert(property_values, escape_html(var.value))
 								end
 							end
 						end
@@ -81,29 +122,40 @@ return {
 							local name = parent_name .. "." .. var.name
 							var = resolve_lazy(var)
 							if vim.tbl_contains(child_names, var.name) or tonumber(var.name) then
-								if var.value ~= "" then
+								local node_id = escape_dot(name)
+								if tostring(var.value or "") ~= "" then
 									f:write(
 										string.format(
 											'  "%s" [label=<<b>%s</b><br/>%s>]\n',
-											name,
-											name,
+											node_id,
+											escape_html(name),
 											table.concat(property_values, "<br/>")
 										)
 									)
 								else
-									f:write(string.format('  "%s"\n', name))
+									f:write(string.format('  "%s"\n', node_id))
 								end
-								f:write(string.format('  "%s" -> "%s"\n', parent_name, name))
+								f:write(string.format('  "%s" -> "%s"\n', escape_dot(parent_name), node_id))
 								add_children(var, name)
 							end
 						end
 					end
 					variable = resolve_lazy(variable)
-					f:write(string.format('  "%s"\n', variable.name))
+					f:write(string.format('  "%s"\n', escape_dot(variable.name)))
 					add_children(variable)
 					f:write("}")
 					f:close()
-					vim.fn.system("dot -Txlib /tmp/dap.gv")
+					vim.system({ "dot", "-Txlib", graph_file }, { text = true }, function(result)
+						vim.uv.fs_unlink(graph_file)
+						if result.code ~= 0 then
+							vim.schedule(function()
+								vim.notify(
+									"DapVisualize failed: " .. vim.trim(result.stderr or "unknown error"),
+									vim.log.levels.ERROR
+								)
+							end)
+						end
+					end)
 				end)()
 			end, { nargs = "?", desc = "Visualize DAP variables with Graphviz" })
 		end,

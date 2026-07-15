@@ -23,6 +23,7 @@ return {
 				-- Auto-highlight references under cursor
 				if client and client.server_capabilities.documentHighlightProvider then
 					local hl_augroup = vim.api.nvim_create_augroup("duu-lsp-highlight", { clear = false })
+					vim.api.nvim_clear_autocmds({ group = hl_augroup, buffer = ev.buf })
 					vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 						buffer = ev.buf,
 						group = hl_augroup,
@@ -86,7 +87,7 @@ return {
 				keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
 
 				opts.desc = "Search Workspace Symbols"
-				keymap.set("n", "ws", "<cmd>Telescope lsp_dynamic_workspace_symbols<CR>", opts) -- show documentation for what is under cursor
+				keymap.set("n", "<leader>ws", "<cmd>Telescope lsp_dynamic_workspace_symbols<CR>", opts) -- show documentation for what is under cursor
 
 				opts.desc = "Show documentation for what is under cursor"
 				keymap.set("i", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts) -- show documentation for what is under cursor

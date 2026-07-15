@@ -149,11 +149,17 @@ autocmd("BufNewFile", {
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>${5:__JAVA_VERSION__}</maven.compiler.source>
-    <maven.compiler.target>${5:__JAVA_VERSION__}</maven.compiler.target>
+    <maven.compiler.release>${5:__JAVA_VERSION__}</maven.compiler.release>
   </properties>
 
   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.15.0</version>
+      </plugin>
+    </plugins>
   </build>
 
   <dependencies>

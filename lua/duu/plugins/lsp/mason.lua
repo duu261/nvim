@@ -21,8 +21,8 @@ return {
 		mason_lspconfig.setup({
 			-- list of servers for mason to install
 			ensure_installed = {},
-			-- jdtls is started manually in ftplugin/java.lua, keep it out of auto-enable
-			automatic_enable = { exclude = { "jdtls" } },
+			-- jdtls is manual; Conform owns StyLua formatting
+			automatic_enable = { exclude = { "jdtls", "stylua" } },
 		})
 		mason_tool_installer.setup({
 			ensure_installed = {

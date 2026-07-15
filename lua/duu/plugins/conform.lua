@@ -5,6 +5,10 @@ return {
 		local conform = require("conform")
 
 		conform.setup({
+			default_format_opts = {
+				timeout_ms = 5000,
+				lsp_format = "fallback",
+			},
 			formatters_by_ft = {
 				javascript = { "prettier" },
 				typescript = { "prettier" },

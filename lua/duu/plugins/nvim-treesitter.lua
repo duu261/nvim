@@ -17,10 +17,13 @@ return {
 				"html",
 				"css",
 				"json",
+				"xml",
+				"yaml",
 				"gitignore",
 				"go",
 				-- Restoring your previous parsers
 				"java",
+				"properties",
 				"regex",
 				"sql",
 				"bash",
