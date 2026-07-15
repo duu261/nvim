@@ -136,13 +136,28 @@ local function java_keymaps(client, bufnr)
 	map("n", "<leader>JM", "<Cmd>lua require('jdtls').extract_variable_all()<CR>", { desc = "[J]ava Extract Variable (All)" })
 	map("v", "<leader>JM", "<Esc><Cmd>lua require('jdtls').extract_variable_all(true)<CR>", { desc = "[J]ava Extract Variable (All)" })
 	map("n", "<leader>Jr", function()
-		local root = vim.fs.root(0, { "mvnw", "pom.xml" }) or vim.fn.getcwd()
-		local mvn = vim.uv.fs_stat(root .. "/mvnw") and "./mvnw" or "mvn"
-		local ok, pom = pcall(vim.fn.readfile, root .. "/pom.xml")
-		local goal = (ok and table.concat(pom, "\n"):find("spring%-boot")) and "spring-boot:run"
-			or "compile exec:java"
+		local root = vim.fs.root(0, { "mvnw", "gradlew", "pom.xml", "build.gradle", "build.gradle.kts" })
+			or vim.fn.getcwd()
+		local command
+		local gradle_build = vim.fs.find({ "build.gradle.kts", "build.gradle" }, {
+			path = vim.fs.dirname(vim.api.nvim_buf_get_name(0)),
+			upward = true,
+			stop = vim.fs.dirname(root),
+		})[1]
+		if gradle_build then
+			local gradle = vim.uv.fs_stat(root .. "/gradlew") and "./gradlew" or "gradle"
+			local ok, build = pcall(vim.fn.readfile, gradle_build)
+			local goal = (ok and table.concat(build, "\n"):find("org%.springframework%.boot")) and "bootRun" or "run"
+			command = gradle .. " " .. goal
+		else
+			local mvn = vim.uv.fs_stat(root .. "/mvnw") and "./mvnw" or "mvn"
+			local ok, pom = pcall(vim.fn.readfile, root .. "/pom.xml")
+			local goal = (ok and table.concat(pom, "\n"):find("spring%-boot")) and "spring-boot:run"
+				or "compile exec:java"
+			command = mvn .. " " .. goal
+		end
 		-- shell stays open after the app exits so crash output survives
-		vim.fn.jobstart({ "tmux", "neww", "-n", "run", "-c", root, mvn .. " " .. goal .. "; exec $SHELL" })
+		vim.fn.jobstart({ "tmux", "neww", "-n", "run", "-c", root, command .. "; exec $SHELL" })
 	end, { desc = "[J]ava [R]un app in tmux window" })
 	map("n", "<leader>Jg", "<Cmd>lua require('jdtls.tests').generate()<CR>", { desc = "[J]ava [G]enerate Tests" })
 	map("n", "<leader>Js", "<Cmd>lua require('jdtls.tests').goto_subjects()<CR>", { desc = "[J]ava Go to [S]ubject" })
@@ -150,13 +165,35 @@ end
 
 local jdtls = require("jdtls")
 local launcher, os_config, lombok = get_jdtls()
-local root_dir = jdtls.setup.find_root({ ".git", "mvnw", "gradlew", "pom.xml", "build.gradle", "build.xml" })
-	or vim.fn.getcwd()
+local root_dir = jdtls.setup.find_root({
+	".git",
+	"mvnw",
+	"gradlew",
+	"pom.xml",
+	"build.gradle",
+	"build.gradle.kts",
+	"settings.gradle",
+	"settings.gradle.kts",
+	"build.xml",
+}) or vim.fn.getcwd()
 local workspace_dir = get_workspace(root_dir)
 local bundles = get_bundles()
 
-local jdk23 = os.getenv("JDK23")
-local java_cmd = jdk23 and (jdk23 .. "/bin/java") or "java"
+local scaffold_ok, scaffold_java = pcall(require, "java_scaffold.java")
+local discovered_homes = scaffold_ok and scaffold_java.discover_homes({}) or {}
+local active_java = scaffold_ok and scaffold_java.active() or nil
+local launcher_home = active_java and discovered_homes[active_java] or nil
+if not launcher_home or tonumber(active_java) < 21 then
+	local versions = vim.tbl_keys(discovered_homes)
+	table.sort(versions, function(left, right) return tonumber(left) > tonumber(right) end)
+	for _, version in ipairs(versions) do
+		if tonumber(version) >= 21 then
+			launcher_home = discovered_homes[version]
+			break
+		end
+	end
+end
+local java_cmd = launcher_home and (launcher_home .. "/bin/java") or "java"
 
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 capabilities.workspace = { configuration = true }
@@ -232,21 +269,17 @@ local settings = {
 		},
 		project = { sourcePaths = { "src" } },
 		configuration = {
-			-- only offer runtimes whose env var is actually set
 			runtimes = (function()
 				local runtimes = {}
-				local candidates = {
-					{ name = "JavaSE-1.8", env = "JDK8" },
-					{ name = "JavaSE-17", env = "JDK17" },
-					{ name = "JavaSE-21", env = "JDK21", default = true },
-					{ name = "JavaSE-22", env = "JDK22" },
-					{ name = "JavaSE-23", env = "JDK23" },
-				}
-				for _, c in ipairs(candidates) do
-					local path = os.getenv(c.env)
-					if path and path ~= "" then
-						table.insert(runtimes, { name = c.name, path = path, default = c.default })
-					end
+				local versions = vim.tbl_keys(discovered_homes)
+				table.sort(versions, function(left, right) return tonumber(left) < tonumber(right) end)
+				for _, version in ipairs(versions) do
+					local name = version == "8" and "JavaSE-1.8" or ("JavaSE-" .. version)
+					table.insert(runtimes, {
+						name = name,
+						path = discovered_homes[version],
+						default = version == active_java,
+					})
 				end
 				return runtimes
 			end)(),

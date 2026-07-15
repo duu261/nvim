@@ -125,6 +125,17 @@ autocmd("BufNewFile", {
 	group = augroup("auto_templates", { clear = true }),
 	pattern = "pom.xml",
 	callback = function(args)
+		local java_version = "JAVA_VERSION"
+		if vim.fn.executable("java") == 1 then
+			local ok, result = pcall(function()
+				return vim.system({ "java", "-version" }, { text = true }):wait()
+			end)
+			if ok and result.code == 0 then
+				local output = (result.stdout or "") .. "\n" .. (result.stderr or "")
+				local raw = output:match('version%s+"([^"]+)"')
+				java_version = raw and (raw:match("^1%.(%d+)") or raw:match("^(%d+)")) or java_version
+			end
+		end
 		local content = [[
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -138,8 +149,8 @@ autocmd("BufNewFile", {
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>${5:21}</maven.compiler.source>
-    <maven.compiler.target>${5:21}</maven.compiler.target>
+    <maven.compiler.source>${5:__JAVA_VERSION__}</maven.compiler.source>
+    <maven.compiler.target>${5:__JAVA_VERSION__}</maven.compiler.target>
   </properties>
 
   <build>
@@ -149,6 +160,7 @@ autocmd("BufNewFile", {
   </dependencies>
 </project>
 ]]
+		content = content:gsub("__JAVA_VERSION__", java_version)
 		if vim.snippet then
 			vim.snippet.expand(content)
 		else
