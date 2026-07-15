@@ -137,7 +137,12 @@ local function java_keymaps(client, bufnr)
 	end
 	local function test_with_profile(test_fn)
 		return function()
-			local async_profiler_so = vim.fn.expand("~/apps/async-profiler/lib/libasyncProfiler.so")
+			-- Resolve from the managed executable so Ansible upgrades the agent and CLI together.
+			local asprof = vim.fn.exepath("asprof")
+			local asprof_path = asprof ~= "" and (vim.uv.fs_realpath(asprof) or asprof) or nil
+			local profiler_home = asprof_path and vim.fs.dirname(vim.fs.dirname(asprof_path)) or nil
+			local async_profiler_so = profiler_home and vim.fs.joinpath(profiler_home, "lib", "libasyncProfiler.so")
+				or vim.fn.expand("~/apps/async-profiler/lib/libasyncProfiler.so")
 			if vim.fn.filereadable(async_profiler_so) ~= 1 then
 				vim.notify("Java profiler unavailable: " .. async_profiler_so, vim.log.levels.ERROR)
 				return
