@@ -8,6 +8,7 @@ return {
 		"JavaScaffoldSpring",
 		"JavaScaffoldAddDependency",
 		"JavaScaffoldLog",
+		"JavaScaffoldHealth",
 	},
 	keys = {
 		{ "<leader>mp", "<cmd>JavaScaffoldMaven<cr>", desc = "Maven new project" },
