@@ -69,8 +69,10 @@ local function get_bundles()
 end
 
 local function get_workspace(root_dir)
-	local project_name = vim.fn.fnamemodify(root_dir, ":p:h:t")
-	return os.getenv("HOME") .. "/code/workspace/" .. project_name
+	local canonical_root = vim.uv.fs_realpath(root_dir) or vim.fs.normalize(root_dir)
+	local project_name = vim.fn.fnamemodify(canonical_root, ":t")
+	local project_hash = vim.fn.sha256(canonical_root):sub(1, 12)
+	return vim.fs.joinpath(vim.fn.expand("~/code/workspace"), project_name .. "-" .. project_hash)
 end
 
 local function java_keymaps(client, bufnr)
@@ -79,33 +81,78 @@ local function java_keymaps(client, bufnr)
 		opts.buffer = bufnr
 		vim.keymap.set(mode, lhs, rhs, opts)
 	end
-	local function compile()
-		if vim.bo.modified then
-			vim.cmd("w")
-		end
-		---@diagnostic disable-next-line: param-type-mismatch
-		client:request_sync("java/buildWorkspace", false, 5000, bufnr)
-	end
 	local function with_compile(fn)
 		return function()
-			compile()
-			fn()
+			if vim.bo[bufnr].modified then
+				local saved, save_error = pcall(vim.api.nvim_buf_call, bufnr, function()
+					vim.cmd.write()
+				end)
+				if not saved then
+					vim.notify("Java build skipped: " .. tostring(save_error), vim.log.levels.ERROR)
+					return
+				end
+			end
+			local requested, request_error = client:request("java/buildWorkspace", false, function(err, result)
+				vim.schedule(function()
+					if err then
+						local message = type(err) == "table" and err.message or tostring(err)
+						vim.notify("Java build failed: " .. message, vim.log.levels.ERROR)
+						return
+					end
+					if result ~= 1 then
+						local statuses = { [0] = "failed", [2] = "completed with errors", [3] = "cancelled" }
+						vim.notify(
+							"Java build " .. (statuses[result] or "returned an unknown status"),
+							vim.log.levels.ERROR
+						)
+						return
+					end
+					local ok, test_error = pcall(fn)
+					if not ok then
+						vim.notify("Java test failed to start: " .. tostring(test_error), vim.log.levels.ERROR)
+					end
+				end)
+			end, bufnr)
+			if not requested then
+				vim.notify("Java build request failed: " .. tostring(request_error), vim.log.levels.ERROR)
+			end
 		end
 	end
 	local function test_with_profile(test_fn)
 		return function()
-			local choices = { 'cpu,alloc=2m,lock=10ms', 'cpu', 'alloc', 'wall' }
+			local async_profiler_so = vim.fn.expand("~/apps/async-profiler/lib/libasyncProfiler.so")
+			if vim.fn.filereadable(async_profiler_so) ~= 1 then
+				vim.notify("Java profiler unavailable: " .. async_profiler_so, vim.log.levels.ERROR)
+				return
+			end
+			if vim.fn.executable("flamelens") ~= 1 then
+				vim.notify("Java profiler viewer unavailable: install flamelens", vim.log.levels.ERROR)
+				return
+			end
+			local choices = { "cpu,alloc=2m,lock=10ms", "cpu", "alloc", "wall" }
 			vim.ui.select(choices, { format_item = tostring }, function(choice)
-				if not choice then return end
-				local async_profiler_so = os.getenv("HOME") .. "/apps/async-profiler/lib/libasyncProfiler.so"
-				local vmArgs = string.format("-ea -agentpath:%s=start,event=%s,collapsed,file=/tmp/profile.txt", async_profiler_so, choice)
+				if not choice then
+					return
+				end
+				local profile_path = vim.fn.tempname() .. ".collapsed"
+				local vmArgs = string.format(
+					"-ea -agentpath:%s=start,event=%s,collapsed,file=%s",
+					async_profiler_so,
+					choice,
+					profile_path
+				)
 				test_fn({
+					bufnr = bufnr,
 					config_overrides = { vmArgs = vmArgs, noDebug = true },
 					after_test = function()
 						vim.cmd.tabnew()
-						vim.fn.jobstart({"flamelens", "/tmp/profile.txt"}, { term = true })
+						local job = vim.fn.jobstart({ "flamelens", profile_path }, { term = true })
+						if job <= 0 then
+							vim.notify("Failed to start flamelens", vim.log.levels.ERROR)
+							return
+						end
 						vim.cmd.startinsert()
-					end
+					end,
 				})
 			end)
 		end
@@ -113,6 +160,7 @@ local function java_keymaps(client, bufnr)
 
 	local jdtls = require("jdtls")
 	local test_opts = {
+		bufnr = bufnr,
 		config_overrides = {
 			vmArgs = "-Xshare:off -XX:+EnableDynamicAgentLoading -ea -XX:+TieredCompilation -XX:TieredStopAtLevel=1",
 			stepFilters = {
@@ -123,35 +171,89 @@ local function java_keymaps(client, bufnr)
 	}
 	map("n", "<leader>Jo", "<Cmd>lua require('jdtls').organize_imports()<CR>", { desc = "[J]ava [O]rganize Imports" })
 	map("n", "<leader>Jv", "<Cmd>lua require('jdtls').extract_variable()<CR>", { desc = "[J]ava Extract [V]ariable" })
-	map("v", "<leader>Jv", "<Esc><Cmd>lua require('jdtls').extract_variable(true)<CR>", { desc = "[J]ava Extract [V]ariable" })
+	map(
+		"v",
+		"<leader>Jv",
+		"<Esc><Cmd>lua require('jdtls').extract_variable(true)<CR>",
+		{ desc = "[J]ava Extract [V]ariable" }
+	)
 	map("n", "<leader>JC", "<Cmd>lua require('jdtls').extract_constant()<CR>", { desc = "[J]ava Extract [C]onstant" })
-	map("v", "<leader>JC", "<Esc><Cmd>lua require('jdtls').extract_constant(true)<CR>", { desc = "[J]ava Extract [C]onstant" })
-	map("n", "<leader>Jt", with_compile(function() jdtls.test_nearest_method(test_opts) end), { desc = "[J]ava [T]est Method" })
-	map("v", "<leader>Jt", with_compile(function() jdtls.test_nearest_method(vim.tbl_extend("force", test_opts, { true })) end), { desc = "[J]ava [T]est Method" })
-	map("n", "<leader>JT", with_compile(function() jdtls.test_class(test_opts) end), { desc = "[J]ava [T]est Class" })
+	map(
+		"v",
+		"<leader>JC",
+		"<Esc><Cmd>lua require('jdtls').extract_constant(true)<CR>",
+		{ desc = "[J]ava Extract [C]onstant" }
+	)
+	local function test_method(lnum)
+		with_compile(function()
+			local opts = vim.deepcopy(test_opts)
+			opts.lnum = lnum
+			jdtls.test_nearest_method(opts)
+		end)()
+	end
+	map("n", "<leader>Jt", function()
+		test_method(vim.api.nvim_win_get_cursor(0)[1])
+	end, { desc = "[J]ava [T]est Method" })
+	map("v", "<leader>Jt", function()
+		test_method(vim.fn.line("'<"))
+	end, { desc = "[J]ava [T]est Method" })
+	map(
+		"n",
+		"<leader>JT",
+		with_compile(function()
+			jdtls.test_class(test_opts)
+		end),
+		{ desc = "[J]ava [T]est Class" }
+	)
 	map("n", "<leader>Jp", with_compile(test_with_profile(jdtls.test_class)), { desc = "[J]ava Test with [P]rofile" })
-	map("n", "<leader>JP", function() require('jdtls.dap').pick_test() end, { desc = "[J]ava [P]ick Test" })
+	map("n", "<leader>JP", function()
+		require("jdtls.dap").pick_test()
+	end, { desc = "[J]ava [P]ick Test" })
 	map("n", "<leader>Ju", "<Cmd>JdtUpdateConfig<CR>", { desc = "[J]ava [U]pdate Config" })
-	map("v", "<leader>Jm", "<Esc><Cmd>lua require('jdtls').extract_method(true)<CR>", { desc = "[J]ava Extract [M]ethod" })
-	map("n", "<leader>JM", "<Cmd>lua require('jdtls').extract_variable_all()<CR>", { desc = "[J]ava Extract Variable (All)" })
-	map("v", "<leader>JM", "<Esc><Cmd>lua require('jdtls').extract_variable_all(true)<CR>", { desc = "[J]ava Extract Variable (All)" })
+	map(
+		"v",
+		"<leader>Jm",
+		"<Esc><Cmd>lua require('jdtls').extract_method(true)<CR>",
+		{ desc = "[J]ava Extract [M]ethod" }
+	)
+	map(
+		"n",
+		"<leader>JM",
+		"<Cmd>lua require('jdtls').extract_variable_all()<CR>",
+		{ desc = "[J]ava Extract Variable (All)" }
+	)
+	map(
+		"v",
+		"<leader>JM",
+		"<Esc><Cmd>lua require('jdtls').extract_variable_all(true)<CR>",
+		{ desc = "[J]ava Extract Variable (All)" }
+	)
 	map("n", "<leader>Jr", function()
-		local root = vim.fs.root(0, { "mvnw", "gradlew", "pom.xml", "build.gradle", "build.gradle.kts" })
-			or vim.fn.getcwd()
+		local buffer_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+		local client_root = vim.fs.normalize(client.config.root_dir or vim.fn.getcwd())
+		local stop = vim.fs.dirname(client_root)
+		local wrapper = vim.fs.find({ "gradlew", "mvnw" }, {
+			path = buffer_dir,
+			upward = true,
+			stop = stop,
+		})[1]
+		local root = wrapper and vim.fs.dirname(wrapper) or client_root
 		local command
 		local gradle_build = vim.fs.find({ "build.gradle.kts", "build.gradle" }, {
-			path = vim.fs.dirname(vim.api.nvim_buf_get_name(0)),
+			path = buffer_dir,
 			upward = true,
-			stop = vim.fs.dirname(root),
+			stop = stop,
 		})[1]
-		if gradle_build then
-			local gradle = vim.uv.fs_stat(root .. "/gradlew") and "./gradlew" or "gradle"
+		local is_gradle = (wrapper and vim.fs.basename(wrapper) == "gradlew") or (not wrapper and gradle_build)
+		if is_gradle then
+			local gradle = wrapper and "./gradlew" or "gradle"
 			local ok, build = pcall(vim.fn.readfile, gradle_build)
 			local goal = (ok and table.concat(build, "\n"):find("org%.springframework%.boot")) and "bootRun" or "run"
 			command = gradle .. " " .. goal
 		else
-			local mvn = vim.uv.fs_stat(root .. "/mvnw") and "./mvnw" or "mvn"
-			local ok, pom = pcall(vim.fn.readfile, root .. "/pom.xml")
+			local mvn = wrapper and "./mvnw" or "mvn"
+			local pom_file = vim.fs.find("pom.xml", { path = buffer_dir, upward = true, stop = stop })[1]
+			local ok, pom = pcall(vim.fn.readfile, pom_file or "")
 			local goal = (ok and table.concat(pom, "\n"):find("spring%-boot")) and "spring-boot:run"
 				or "compile exec:java"
 			command = mvn .. " " .. goal
@@ -165,27 +267,36 @@ end
 
 local jdtls = require("jdtls")
 local launcher, os_config, lombok = get_jdtls()
-local root_dir = jdtls.setup.find_root({
-	".git",
-	"mvnw",
-	"gradlew",
-	"pom.xml",
-	"build.gradle",
-	"build.gradle.kts",
-	"settings.gradle",
-	"settings.gradle.kts",
-	"build.xml",
-}) or vim.fn.getcwd()
+local root_markers = { "mvnw", "gradlew", "settings.gradle", "settings.gradle.kts" }
+local root_dir = jdtls.setup.find_root(root_markers)
+local git_root = jdtls.setup.find_root({ ".git" })
+if not root_dir and git_root then
+	for _, build_file in ipairs({ "pom.xml", "build.gradle", "build.gradle.kts", "build.xml" }) do
+		if vim.uv.fs_stat(vim.fs.joinpath(git_root, build_file)) then
+			root_dir = git_root
+			break
+		end
+	end
+end
+root_dir = root_dir
+	or jdtls.setup.find_root({ "pom.xml", "build.gradle", "build.gradle.kts", "build.xml" })
+	or git_root
+	or vim.fn.getcwd()
 local workspace_dir = get_workspace(root_dir)
 local bundles = get_bundles()
 
-local scaffold_ok, scaffold_java = pcall(require, "java_scaffold.java")
-local discovered_homes = scaffold_ok and scaffold_java.discover_homes({}) or {}
-local active_java = scaffold_ok and scaffold_java.active() or nil
+local runtime_ok, runtime_snapshot = pcall(function()
+	return require("java_scaffold").java_runtimes()
+end)
+runtime_snapshot = runtime_ok and runtime_snapshot or { homes = {}, active = nil }
+local discovered_homes = runtime_snapshot.homes
+local active_java = runtime_snapshot.active
 local launcher_home = active_java and discovered_homes[active_java] or nil
 if not launcher_home or tonumber(active_java) < 21 then
 	local versions = vim.tbl_keys(discovered_homes)
-	table.sort(versions, function(left, right) return tonumber(left) > tonumber(right) end)
+	table.sort(versions, function(left, right)
+		return tonumber(left) > tonumber(right)
+	end)
 	for _, version in ipairs(versions) do
 		if tonumber(version) >= 21 then
 			launcher_home = discovered_homes[version]
@@ -233,11 +344,10 @@ local settings = {
 		signatureHelp = { enabled = true, description = { enabled = true } },
 		compile = { nullAnalysis = { mode = "automatic" } },
 		references = { includeDecompiledSources = true },
-		implementationsCodeLens = { enabled = true },
+		implementationCodeLens = "all",
 		contentProvider = { preferred = "fernflower" },
-		saveActions = { organizeImports = true },
 		completion = {
-			guessMethodArguments = true, -- insert argument placeholders on method completion, IDE-style
+			guessMethodArguments = "insertBestGuessedArguments",
 			postfix = { enabled = true }, -- e.g. `expr.var<Tab>`, `expr.if<Tab>` templates
 			favoriteStaticMembers = {
 				"org.hamcrest.MatcherAssert.assertThat",
@@ -272,7 +382,9 @@ local settings = {
 			runtimes = (function()
 				local runtimes = {}
 				local versions = vim.tbl_keys(discovered_homes)
-				table.sort(versions, function(left, right) return tonumber(left) < tonumber(right) end)
+				table.sort(versions, function(left, right)
+					return tonumber(left) < tonumber(right)
+				end)
 				for _, version in ipairs(versions) do
 					local name = version == "8" and "JavaSE-1.8" or ("JavaSE-" .. version)
 					table.insert(runtimes, {
@@ -286,7 +398,7 @@ local settings = {
 			updateBuildConfiguration = "automatic", -- re-sync classpath on pom/gradle edits, no prompt
 		},
 		test = {
-			defaultVMArgs = "-Xshare:off -XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage"
+			defaultVMArgs = "-Xshare:off -XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage",
 		},
 		referencesCodeLens = { enabled = true },
 		inlayHints = { parameterNames = { enabled = "all" } },
@@ -295,23 +407,10 @@ local settings = {
 
 local on_attach = function(client, bufnr)
 	java_keymaps(client, bufnr)
-	require("jdtls.dap").setup_dap({ hotcodereplace = "auto" })
-	
+
 	vim.api.nvim_buf_create_user_command(bufnr, "A", function()
 		require("jdtls.tests").goto_subjects()
 	end, { desc = "Alternate between Test and Subject" })
-	
-	-- can fail if jdtls is slow to start; if ClassDefNotFoundException occurs, run from main class or restart nvim
-	require("jdtls.dap").setup_dap_main_class_configs({
-		hotcodereplace = "auto",
-		config_overrides = {
-			vmArgs = "-Xshare:off",
-			stepFilters = {
-				skipClasses = { "$JDK", "junit.*" },
-				skipSynthetics = true,
-			},
-		},
-	})
 
 	if vim.lsp.codelens.enable then
 		pcall(vim.lsp.codelens.enable, true, { bufnr = bufnr })
@@ -339,7 +438,18 @@ require("jdtls").start_or_attach({
 		extendedClientCapabilities = extendedClientCapabilities,
 	},
 	handlers = {
-		["language/status"] = function() end
+		["language/status"] = function() end,
 	},
 	on_attach = on_attach,
+}, {
+	dap = {
+		hotcodereplace = "auto",
+		config_overrides = {
+			vmArgs = "-Xshare:off",
+			stepFilters = {
+				skipClasses = { "$JDK", "junit.*" },
+				skipSynthetics = true,
+			},
+		},
+	},
 })

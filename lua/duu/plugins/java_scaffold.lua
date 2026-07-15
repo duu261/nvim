@@ -2,7 +2,6 @@ return {
 	dir = "~/Projects/java-scaffold.nvim",
 	name = "java-scaffold.nvim",
 	cond = vim.fn.isdirectory(vim.fn.expand("~/Projects/java-scaffold.nvim")) == 1,
-	lazy = false,
 	cmd = {
 		"JavaScaffoldMaven",
 		"JavaScaffoldGradle",
@@ -10,22 +9,12 @@ return {
 		"JavaScaffoldAddDependency",
 		"JavaScaffoldLog",
 	},
-	init = function()
-		vim.api.nvim_create_autocmd("VimEnter", {
-			once = true,
-			callback = function()
-				vim.keymap.set("n", "<leader>mp", "<cmd>JavaScaffoldMaven<cr>", { desc = "Maven new project" })
-				vim.keymap.set("n", "<leader>mg", "<cmd>JavaScaffoldGradle<cr>", { desc = "Gradle new project" })
-				vim.keymap.set("n", "<leader>ms", "<cmd>JavaScaffoldSpring<cr>", { desc = "Spring new project" })
-				vim.keymap.set(
-					"n",
-					"<leader>md",
-					"<cmd>JavaScaffoldAddDependency<cr>",
-					{ desc = "Spring add dependencies" }
-				)
-			end,
-		})
-	end,
+	keys = {
+		{ "<leader>mp", "<cmd>JavaScaffoldMaven<cr>", desc = "Maven new project" },
+		{ "<leader>mg", "<cmd>JavaScaffoldGradle<cr>", desc = "Gradle new project" },
+		{ "<leader>ms", "<cmd>JavaScaffoldSpring<cr>", desc = "Spring new project" },
+		{ "<leader>md", "<cmd>JavaScaffoldAddDependency<cr>", desc = "Spring add dependencies" },
+	},
 	config = function()
 		require("java_scaffold").setup({
 			group_id = "com.duu",
