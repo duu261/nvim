@@ -30,10 +30,15 @@ return {
 					prepend_args = { "--aosp" }, -- 4-space indent, matches tabs=4 preference
 				},
 			},
-			format_on_save = {
-				timeout_ms = 5000,
-				lsp_format = "fallback",
-			},
+			format_on_save = function(bufnr)
+				if vim.bo[bufnr].filetype == "xml" then
+					return -- lemminx reformats the whole pom, burying one-line dependency edits
+				end
+				return {
+					timeout_ms = 5000,
+					lsp_format = "fallback",
+				}
+			end,
 		})
 
 		vim.keymap.set({ "n", "v" }, "<leader>f", function()
