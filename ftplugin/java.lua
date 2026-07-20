@@ -322,7 +322,7 @@ local workspace_dir = get_workspace(root_dir)
 local bundles = get_bundles()
 
 local runtime_ok, runtime_snapshot = pcall(function()
-	return require("java_scaffold").java_runtimes()
+	return require("duke").java_runtimes()
 end)
 runtime_snapshot = runtime_ok and runtime_snapshot or { homes = {}, active = nil }
 local discovered_homes = runtime_snapshot.homes
@@ -340,7 +340,7 @@ if not launcher_home or tonumber(active_java) < 21 then
 		end
 	end
 end
-local java_cmd = launcher_home and (launcher_home .. "/bin/java") or "java"
+local java_cmd = launcher_home and vim.fs.joinpath(launcher_home, "bin", "java") or "java"
 
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 capabilities.workspace = vim.tbl_deep_extend("force", capabilities.workspace or {}, {
